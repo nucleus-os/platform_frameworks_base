@@ -3812,6 +3812,32 @@ class StorageManagerService extends IStorageManager.Stub
     }
 
     @Override
+    public void registerFuseDaemon(String sessionId, String mountPath,
+            ParcelFileDescriptor fuseFd) {
+        super.registerFuseDaemon_enforcePermission();
+        Objects.requireNonNull(sessionId);
+        Objects.requireNonNull(mountPath);
+        Objects.requireNonNull(fuseFd);
+        try {
+            mVold.registerFuseDaemon(
+                    sessionId, mountPath, fuseFd.getFileDescriptor(), Binder.getCallingPid());
+        } catch (RemoteException e) {
+            throw e.rethrowAsRuntimeException();
+        }
+    }
+
+    @Override
+    public void unregisterFuseDaemon(String sessionId) {
+        super.unregisterFuseDaemon_enforcePermission();
+        Objects.requireNonNull(sessionId);
+        try {
+            mVold.unregisterFuseDaemon(sessionId, Binder.getCallingPid());
+        } catch (RemoteException e) {
+            throw e.rethrowAsRuntimeException();
+        }
+    }
+
+    @Override
     public void mkdirs(String callingPkg, String appPath) {
         final int callingUid = Binder.getCallingUid();
         final int userId = UserHandle.getUserId(callingUid);

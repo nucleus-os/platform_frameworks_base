@@ -197,9 +197,24 @@ static jlong android_server_alarm_AlarmManagerService_init(JNIEnv*, jobject)
     }
 
     for (size_t i = 0; i < fds.size(); i++) {
-        fds[i] = timerfd_create(android_alarm_to_clockid[i], TFD_NONBLOCK);
+        const clockid_t clockId = android_alarm_to_clockid[i];
+        fds[i] = timerfd_create(clockId, TFD_NONBLOCK);
+        if (fds[i] < 0 && errno == EPERM &&
+            (clockId == CLOCK_REALTIME_ALARM ||
+             clockId == CLOCK_BOOTTIME_ALARM)) {
+            // A user-namespaced Android cannot exercise CAP_WAKE_ALARM in the
+            // initial user namespace. Preserve alarm scheduling without
+            // granting the guest authority to wake the physical host.
+            const clockid_t fallbackClockId =
+                    clockId == CLOCK_REALTIME_ALARM
+                    ? CLOCK_REALTIME
+                    : CLOCK_BOOTTIME;
+            ALOGW("alarm clock %d unavailable; using non-wakeup clock %d",
+                  clockId, fallbackClockId);
+            fds[i] = timerfd_create(fallbackClockId, TFD_NONBLOCK);
+        }
         if (fds[i] < 0) {
-            log_timerfd_create_error(android_alarm_to_clockid[i]);
+            log_timerfd_create_error(clockId);
             close(epollfd);
             for (size_t j = 0; j < i; j++) {
                 close(fds[j]);

@@ -3177,6 +3177,11 @@ public final class Settings implements Watchable, Snappable, ResilientAtomicFile
     }
 
     void writePackageListLPr(int creatingUserId) {
+        if (!SELinux.isSELinuxEnabled()) {
+            writePackageListLPrInternal(creatingUserId);
+            return;
+        }
+
         String filename = mPackageListFilename.getAbsolutePath();
         String ctx = SELinux.fileSelabelLookup(filename);
         if (ctx == null) {

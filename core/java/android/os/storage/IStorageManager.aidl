@@ -170,4 +170,9 @@ interface IStorageManager {
      * is returned.
      */
     int getInternalStorageRemainingLifetime() = 99;
+    @EnforcePermission("WRITE_MEDIA_STORAGE")
+    void registerFuseDaemon(in String sessionId, in String mountPath,
+            in ParcelFileDescriptor fuseFd) = 100;
+    @EnforcePermission("WRITE_MEDIA_STORAGE")
+    void unregisterFuseDaemon(in String sessionId) = 101;
 }

@@ -1378,6 +1378,30 @@ public final class InputManager {
     }
 
     /**
+     * Controls whether Android composes its pointer icon on the specified display.
+     *
+     * @hide
+     */
+    @RequiresPermission(Manifest.permission.ASSOCIATE_INPUT_DEVICE_TO_DISPLAY)
+    public void setPointerIconVisible(boolean visible, int displayId) {
+        mGlobal.setPointerIconVisible(visible, displayId);
+    }
+
+    /** @hide */
+    @RequiresPermission(Manifest.permission.ASSOCIATE_INPUT_DEVICE_TO_DISPLAY)
+    public void registerPointerIconChangedListener(
+            @NonNull IPointerIconChangedListener listener) {
+        mGlobal.registerPointerIconChangedListener(listener);
+    }
+
+    /** @hide */
+    @RequiresPermission(Manifest.permission.ASSOCIATE_INPUT_DEVICE_TO_DISPLAY)
+    public void unregisterPointerIconChangedListener(
+            @NonNull IPointerIconChangedListener listener) {
+        mGlobal.unregisterPointerIconChangedListener(listener);
+    }
+
+    /**
      * Injects an input event into the event system on behalf of an application.
      * The synchronization mode determines whether the method blocks while waiting for
      * input injection to proceed.

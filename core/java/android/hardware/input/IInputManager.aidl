@@ -29,6 +29,7 @@ import android.hardware.input.IKeyboardBacklightListener;
 import android.hardware.input.IKeyboardBacklightState;
 import android.hardware.input.IKeyGestureEventListener;
 import android.hardware.input.IKeyGestureHandler;
+import android.hardware.input.IPointerIconChangedListener;
 import android.hardware.input.IStickyModifierStateListener;
 import android.hardware.input.ITabletModeChangedListener;
 import android.hardware.input.IVirtualGamepad;
@@ -99,6 +100,12 @@ interface IInputManager {
 
     @EnforcePermission("INJECT_EVENTS")
     IVirtualMouse createVirtualMouse(in IBinder token, in VirtualMouseConfig config);
+
+    // Controls framework pointer-icon composition for a display whose input is presented by
+    // another window system. The caller must have ASSOCIATE_INPUT_DEVICE_TO_DISPLAY.
+    void setPointerIconVisible(boolean visible, int displayId);
+    void registerPointerIconChangedListener(in IPointerIconChangedListener listener);
+    void unregisterPointerIconChangedListener(in IPointerIconChangedListener listener);
 
     // Injects an input event into the system. The caller must have the INJECT_EVENTS permission.
     // The caller can target windows owned by a certain UID by providing a valid UID, or by

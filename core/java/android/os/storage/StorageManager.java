@@ -2870,6 +2870,50 @@ public class StorageManager {
     }
 
     /**
+     * Registers this external-storage service process as the daemon serving a FUSE mount.
+     *
+     * The file descriptor is the unforgeable mount capability supplied to the service by the
+     * storage session. The system rejects descriptors that do not belong to the named mount.
+     *
+     * @param sessionId the external-storage session identifier
+     * @param mountPath the upper filesystem path supplied with the session
+     * @param fuseFd the FUSE device descriptor supplied with the session
+     * @hide
+     */
+    @SystemApi(client = SystemApi.Client.MODULE_LIBRARIES)
+    @SuppressLint("UnflaggedApi") // Immutable Nucleus product integration, not a feature.
+    @RequiresPermission(android.Manifest.permission.WRITE_MEDIA_STORAGE)
+    public void registerFuseDaemon(@NonNull String sessionId, @NonNull String mountPath,
+            @NonNull ParcelFileDescriptor fuseFd) {
+        Objects.requireNonNull(sessionId);
+        Objects.requireNonNull(mountPath);
+        Objects.requireNonNull(fuseFd);
+        try {
+            mStorageManager.registerFuseDaemon(sessionId, mountPath, fuseFd);
+        } catch (RemoteException e) {
+            throw e.rethrowFromSystemServer();
+        }
+    }
+
+    /**
+     * Removes this external-storage service process from the active FUSE daemon registry.
+     *
+     * @param sessionId the external-storage session identifier
+     * @hide
+     */
+    @SystemApi(client = SystemApi.Client.MODULE_LIBRARIES)
+    @SuppressLint("UnflaggedApi") // Immutable Nucleus product integration, not a feature.
+    @RequiresPermission(android.Manifest.permission.WRITE_MEDIA_STORAGE)
+    public void unregisterFuseDaemon(@NonNull String sessionId) {
+        Objects.requireNonNull(sessionId);
+        try {
+            mStorageManager.unregisterFuseDaemon(sessionId);
+        } catch (RemoteException e) {
+            throw e.rethrowFromSystemServer();
+        }
+    }
+
+    /**
      * Check if {@code uid} with {@code tid} is blocked on IO for {@code reason}.
      *
      * This requires {@link ExternalStorageService} the

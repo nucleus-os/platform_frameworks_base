@@ -588,7 +588,9 @@ package android.os.storage {
     method @Nullable public String getCloudMediaProvider();
     method public void notifyAppIoBlocked(@NonNull java.util.UUID, int, int, int);
     method public void notifyAppIoResumed(@NonNull java.util.UUID, int, int, int);
+    method @RequiresPermission(android.Manifest.permission.WRITE_MEDIA_STORAGE) public void registerFuseDaemon(@NonNull String, @NonNull String, @NonNull android.os.ParcelFileDescriptor);
     method public void setCloudMediaProvider(@Nullable String);
+    method @RequiresPermission(android.Manifest.permission.WRITE_MEDIA_STORAGE) public void unregisterFuseDaemon(@NonNull String);
     field public static final int APP_IO_BLOCKED_REASON_TRANSCODING = 1; // 0x1
     field public static final int APP_IO_BLOCKED_REASON_UNKNOWN = 0; // 0x0
   }

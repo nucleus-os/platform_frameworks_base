@@ -68,6 +68,7 @@ import android.hardware.input.IVirtualGamepad;
 import android.hardware.input.IVirtualKeyboard;
 import android.hardware.input.IVirtualMouse;
 import android.hardware.input.IVirtualNavigationTouchpad;
+import android.hardware.input.IPointerIconChangedListener;
 import android.hardware.input.IVirtualRotaryEncoder;
 import android.hardware.input.IVirtualStylus;
 import android.hardware.input.IVirtualTouchscreen;
@@ -271,6 +272,8 @@ public class InputManagerService extends IInputManager.Stub
     @GuardedBy("mVibratorLock")
     private final SparseArray<RemoteCallbackList<IVibratorStateListener>> mVibratorStateListeners =
             new SparseArray<>();
+    private final RemoteCallbackList<IPointerIconChangedListener>
+            mPointerIconChangedListeners = new RemoteCallbackList<>();
     // List of vibrator states by device id.
     @GuardedBy("mVibratorLock")
     private final SparseBooleanArray mIsVibrating = new SparseBooleanArray();
@@ -1528,9 +1531,45 @@ public class InputManagerService extends IInputManager.Stub
                 properties -> properties.mouseScalingEnabled = enabled);
     }
 
-    private void setPointerIconVisible(boolean visible, int displayId) {
+    private void setPointerIconVisibleInternal(boolean visible, int displayId) {
         updateAdditionalDisplayInputProperties(displayId,
                 properties -> properties.pointerIconVisible = visible);
+    }
+
+    @Override // Binder call
+    public void setPointerIconVisible(boolean visible, int displayId) {
+        if (!checkCallingPermission(
+                android.Manifest.permission.ASSOCIATE_INPUT_DEVICE_TO_DISPLAY,
+                "setPointerIconVisible()")) {
+            throw new SecurityException(
+                    "Requires ASSOCIATE_INPUT_DEVICE_TO_DISPLAY permission");
+        }
+        setPointerIconVisibleInternal(visible, displayId);
+    }
+
+    @Override // Binder call
+    public void registerPointerIconChangedListener(
+            @NonNull IPointerIconChangedListener listener) {
+        enforcePointerPresentationPermission(
+                "registerPointerIconChangedListener()");
+        mPointerIconChangedListeners.register(listener);
+    }
+
+    @Override // Binder call
+    public void unregisterPointerIconChangedListener(
+            @NonNull IPointerIconChangedListener listener) {
+        enforcePointerPresentationPermission(
+                "unregisterPointerIconChangedListener()");
+        mPointerIconChangedListeners.unregister(listener);
+    }
+
+    private void enforcePointerPresentationPermission(String operation) {
+        if (!checkCallingPermission(
+                android.Manifest.permission.ASSOCIATE_INPUT_DEVICE_TO_DISPLAY,
+                operation)) {
+            throw new SecurityException(
+                    "Requires ASSOCIATE_INPUT_DEVICE_TO_DISPLAY permission");
+        }
     }
 
     private void setDisplayEligibilityForPointerCapture(int displayId, boolean isEligible) {
@@ -1832,7 +1871,23 @@ public class InputManagerService extends IInputManager.Stub
     public boolean setPointerIcon(@NonNull PointerIcon icon, int displayId, int deviceId,
             int pointerId, IBinder inputToken) {
         Objects.requireNonNull(icon);
-        return mNative.setPointerIcon(icon, displayId, deviceId, pointerId, inputToken);
+        final boolean changed =
+                mNative.setPointerIcon(icon, displayId, deviceId, pointerId, inputToken);
+        if (changed) {
+            final int count = mPointerIconChangedListeners.beginBroadcast();
+            try {
+                for (int index = 0; index < count; index++) {
+                    try {
+                        mPointerIconChangedListeners.getBroadcastItem(index)
+                                .onPointerIconChanged(displayId, icon.getType());
+                    } catch (RemoteException ignored) {
+                    }
+                }
+            } finally {
+                mPointerIconChangedListeners.finishBroadcast();
+            }
+        }
+        return changed;
     }
 
     /**
@@ -4164,7 +4219,7 @@ public class InputManagerService extends IInputManager.Stub
 
         @Override
         public void setPointerIconVisible(boolean visible, int displayId) {
-            InputManagerService.this.setPointerIconVisible(visible, displayId);
+            InputManagerService.this.setPointerIconVisibleInternal(visible, displayId);
         }
 
         @Override

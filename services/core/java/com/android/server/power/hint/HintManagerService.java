@@ -324,12 +324,10 @@ public final class HintManagerService extends SystemService {
         mPowerHalVersion = 0;
         mVendorApiLevel = Integer.parseInt(SystemProperties.get(PROPERTY_VENDOR_API_LEVEL, ""));
         mUsesFmq = false;
-        if (mPowerHal != null) {
-            try {
-                mSupportInfo = getSupportInfo();
-            } catch (RemoteException e) {
-                throw new IllegalStateException("Could not contact PowerHAL!", e);
-            }
+        try {
+            mSupportInfo = getSupportInfo();
+        } catch (RemoteException e) {
+            throw new IllegalStateException("Could not contact PowerHAL!", e);
         }
         if (mSupportInfo.headroom.isCpuSupported) {
             mCpuHeadroomCache = new HeadroomCache<>(2, mSupportInfo.headroom.cpuMinIntervalMillis);
@@ -362,13 +360,15 @@ public final class HintManagerService extends SystemService {
     }
 
     SupportInfo getSupportInfo() throws RemoteException {
-        try {
-            mPowerHalVersion = mPowerHal.getInterfaceVersion();
-            if (mPowerHalVersion >= 6) {
-                return mPowerHal.getSupportInfo();
+        if (mPowerHal != null) {
+            try {
+                mPowerHalVersion = mPowerHal.getInterfaceVersion();
+                if (mPowerHalVersion >= 6) {
+                    return mPowerHal.getSupportInfo();
+                }
+            } catch (RemoteException e) {
+                throw new IllegalStateException("Could not contact PowerHAL!", e);
             }
-        } catch (RemoteException e) {
-            throw new IllegalStateException("Could not contact PowerHAL!", e);
         }
 
         SupportInfo supportInfo = new SupportInfo();

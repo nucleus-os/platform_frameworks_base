@@ -1784,6 +1784,35 @@ public final class InputManagerGlobal {
     }
 
     /**
+     * @see InputManager#setPointerIconVisible(boolean, int)
+     */
+    public void setPointerIconVisible(boolean visible, int displayId) {
+        try {
+            mIm.setPointerIconVisible(visible, displayId);
+        } catch (RemoteException e) {
+            throw e.rethrowFromSystemServer();
+        }
+    }
+
+    public void registerPointerIconChangedListener(
+            @NonNull IPointerIconChangedListener listener) {
+        try {
+            mIm.registerPointerIconChangedListener(listener);
+        } catch (RemoteException e) {
+            throw e.rethrowFromSystemServer();
+        }
+    }
+
+    public void unregisterPointerIconChangedListener(
+            @NonNull IPointerIconChangedListener listener) {
+        try {
+            mIm.unregisterPointerIconChangedListener(listener);
+        } catch (RemoteException e) {
+            throw e.rethrowFromSystemServer();
+        }
+    }
+
+    /**
      * @see InputManager#setPointerIcon(PointerIcon, int, int, int, IBinder)
      */
     public boolean setPointerIcon(PointerIcon icon, int displayId, int deviceId, int pointerId,

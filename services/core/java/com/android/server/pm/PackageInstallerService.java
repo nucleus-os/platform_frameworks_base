@@ -1427,7 +1427,7 @@ public class PackageInstallerService extends IPackageInstaller.Stub implements
             throw new IOException("Failed to prepare session dir: " + stageDir, e);
         }
 
-        if (!SELinux.restorecon(stageDir)) {
+        if (SELinux.isSELinuxEnabled() && !SELinux.restorecon(stageDir)) {
             String path = stageDir.getCanonicalPath();
             String ctx = SELinux.fileSelabelLookup(path);
             boolean success = SELinux.setFileContext(path, ctx);

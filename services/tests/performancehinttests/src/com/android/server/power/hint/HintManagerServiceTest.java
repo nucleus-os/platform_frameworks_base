@@ -360,6 +360,21 @@ public class HintManagerServiceTest {
         return mService;
     }
 
+    private HintManagerService createServiceWithoutPowerHal() {
+        mService = new HintManagerService(mContext, new Injector() {
+            NativeWrapper createNativeWrapper() {
+                return mNativeWrapperMock;
+            }
+            IPower createIPower() {
+                return null;
+            }
+            IActivityManager getIActivityManager() {
+                return mIActivityManagerMock;
+            }
+        });
+        return mService;
+    }
+
     private HintManagerService createServiceWithFakeWrapper() {
         mService = new HintManagerService(mContext, new Injector() {
             NativeWrapper createNativeWrapper() {
@@ -385,6 +400,27 @@ public class HintManagerServiceTest {
         HintManagerService service = createService();
         verify(mNativeWrapperMock).halInit();
         assertThat(service.mHintSessionPreferredRate).isEqualTo(DEFAULT_HINT_PREFERRED_RATE);
+    }
+
+    @Test
+    public void testInitializeServiceWithoutPowerHal() throws Exception {
+        when(mNativeWrapperMock.halGetHintSessionPreferredRate()).thenReturn(-1L);
+
+        HintManagerService service = createServiceWithoutPowerHal();
+        IHintManager.HintManagerClientData data = service.getBinderServiceInstance()
+                .registerClient(mClientCallback);
+
+        assertNotNull(data.supportInfo);
+        assertNotNull(data.supportInfo.headroom);
+        assertNotNull(data.supportInfo.compositionData);
+        assertFalse(data.supportInfo.usesSessions);
+        assertFalse(data.supportInfo.headroom.isCpuSupported);
+        assertFalse(data.supportInfo.headroom.isGpuSupported);
+        assertFalse(data.supportInfo.compositionData.isSupported);
+        assertThrows(UnsupportedOperationException.class,
+                () -> service.getBinderServiceInstance().getCpuHeadroomMinIntervalMillis());
+        assertThrows(UnsupportedOperationException.class,
+                () -> service.getBinderServiceInstance().getGpuHeadroomMinIntervalMillis());
     }
 
     @Test
