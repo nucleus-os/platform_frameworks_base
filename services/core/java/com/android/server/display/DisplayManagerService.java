@@ -284,6 +284,7 @@ import java.util.function.Predicate;
 @SuppressWarnings("MissingPermission")
 public final class DisplayManagerService extends SystemService {
     private static final String TAG = "DisplayManagerService";
+    private static final int NUCLEUS_RUNTIME_APP_ID = 2900;
 
     // To enable these logs, run:
     // 'adb shell setprop persist.log.tag.DisplayManagerService DEBUG && adb reboot'
@@ -2480,6 +2481,48 @@ public final class DisplayManagerService extends SystemService {
         mDisplayDeviceRepo.onDisplayDeviceEvent(device,
                 DisplayAdapter.DISPLAY_DEVICE_EVENT_REMOVED);
         return -1;
+    }
+
+    private int createNucleusPresentationInternal(long presentationId) {
+        synchronized (mSyncRoot) {
+            if (mNucleusHostDisplayAdapter == null) {
+                throw new IllegalStateException("Nucleus host displays are unavailable");
+            }
+            final DisplayDevice device =
+                    mNucleusHostDisplayAdapter.createApplicationPresentationLocked(
+                            presentationId);
+            mDisplayDeviceRepo.onDisplayDeviceEvent(
+                    device, DisplayAdapter.DISPLAY_DEVICE_EVENT_ADDED);
+            final LogicalDisplay display = mLogicalDisplayMapper.getDisplayLocked(device);
+            if (display != null) {
+                return display.getDisplayIdLocked();
+            }
+            final DisplayDevice removed =
+                    mNucleusHostDisplayAdapter.removeApplicationPresentationLocked(
+                            presentationId);
+            mDisplayDeviceRepo.onDisplayDeviceEvent(
+                    removed, DisplayAdapter.DISPLAY_DEVICE_EVENT_REMOVED);
+            throw new IllegalStateException("Creating Nucleus logical display failed");
+        }
+    }
+
+    private void removeNucleusPresentationInternal(long presentationId) {
+        synchronized (mSyncRoot) {
+            if (mNucleusHostDisplayAdapter == null) {
+                throw new IllegalStateException("Nucleus host displays are unavailable");
+            }
+            final DisplayDevice device =
+                    mNucleusHostDisplayAdapter.removeApplicationPresentationLocked(
+                            presentationId);
+            mDisplayDeviceRepo.onDisplayDeviceEvent(
+                    device, DisplayAdapter.DISPLAY_DEVICE_EVENT_REMOVED);
+        }
+    }
+
+    private void enforceNucleusRuntimeCaller() {
+        if (UserHandle.getAppId(Binder.getCallingUid()) != NUCLEUS_RUNTIME_APP_ID) {
+            throw new SecurityException("Caller does not own Nucleus Android presentations");
+        }
     }
 
     private void resizeVirtualDisplayInternal(IBinder appToken,
@@ -5833,6 +5876,28 @@ public final class DisplayManagerService extends SystemService {
                 String packageName) {
             return createVirtualDisplayInternal(virtualDisplayConfig, callback, projection,
                     null, null, packageName, Binder.getCallingUid());
+        }
+
+        @Override // Binder call
+        public int createNucleusPresentation(long presentationId) {
+            enforceNucleusRuntimeCaller();
+            final long token = Binder.clearCallingIdentity();
+            try {
+                return createNucleusPresentationInternal(presentationId);
+            } finally {
+                Binder.restoreCallingIdentity(token);
+            }
+        }
+
+        @Override // Binder call
+        public void removeNucleusPresentation(long presentationId) {
+            enforceNucleusRuntimeCaller();
+            final long token = Binder.clearCallingIdentity();
+            try {
+                removeNucleusPresentationInternal(presentationId);
+            } finally {
+                Binder.restoreCallingIdentity(token);
+            }
         }
 
         @Override // Binder call

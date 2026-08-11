@@ -108,6 +108,9 @@ interface IDisplayManager {
             in IVirtualDisplayCallback callback, in IMediaProjection projectionToken,
             String packageName);
 
+    int createNucleusPresentation(long presentationId);
+    void removeNucleusPresentation(long presentationId);
+
     // No permissions required, but must be same Uid as the creator.
     void resizeVirtualDisplay(in IVirtualDisplayCallback token,
             int width, int height, int densityDpi);
