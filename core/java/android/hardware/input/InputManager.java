@@ -1378,6 +1378,25 @@ public final class InputManager {
     }
 
     /**
+     * Returns a {@link VirtualTouchscreen} to the caller.
+     * See {@link android.hardware.input.VirtualTouchscreenConfig} for additional configurations
+     * available, e.g. display association, vendor id, product id, device name, size.
+     *
+     * @param config the touchscreen configuration
+     * @return VirtualTouchscreen a virtual touchscreen device
+     *
+     * @hide
+     */
+    @TestApi
+    @SuppressLint("UnflaggedApi") // @TestApi without associated feature.
+    @RequiresPermission(Manifest.permission.INJECT_EVENTS)
+    @NonNull
+    public VirtualTouchscreen createVirtualTouchscreen(
+            @NonNull VirtualTouchscreenConfig config) {
+        return mGlobal.createVirtualTouchscreen(config);
+    }
+
+    /**
      * Controls whether Android composes its pointer icon on the specified display.
      *
      * @hide

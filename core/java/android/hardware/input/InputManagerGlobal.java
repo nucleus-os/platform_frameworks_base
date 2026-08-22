@@ -1784,6 +1784,26 @@ public final class InputManagerGlobal {
     }
 
     /**
+     * @see InputManager#createVirtualTouchscreen(VirtualTouchscreenConfig)
+     */
+    @NonNull
+    @RequiresPermission(Manifest.permission.INJECT_EVENTS)
+    public VirtualTouchscreen createVirtualTouchscreen(
+            @NonNull VirtualTouchscreenConfig config) {
+        IVirtualTouchscreen virtualTouchscreen;
+        try {
+            // Pass a token to the server so that the server can be notified when the calling
+            // process has died and therefore clean up the virtual device.
+            final IBinder token = new Binder(
+                    "android.hardware.input.VirtualTouchscreen:" + config.getInputDeviceName());
+            virtualTouchscreen = mIm.createVirtualTouchscreen(token, config);
+            return new VirtualTouchscreen(config, virtualTouchscreen);
+        } catch (RemoteException e) {
+            throw e.rethrowFromSystemServer();
+        }
+    }
+
+    /**
      * @see InputManager#setPointerIconVisible(boolean, int)
      */
     public void setPointerIconVisible(boolean visible, int displayId) {

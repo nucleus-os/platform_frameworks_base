@@ -2035,6 +2035,7 @@ package android.hardware.input {
     method @RequiresPermission("android.permission.CONTROLLER_REMAPPING") public void clearAllControllerButtonToAxisRemappings(@NonNull android.hardware.input.InputDeviceIdentifier);
     method @RequiresPermission(android.Manifest.permission.REMAP_MODIFIER_KEYS) public void clearAllModifierKeyRemappings();
     method @NonNull @RequiresPermission(android.Manifest.permission.INJECT_EVENTS) public android.hardware.input.VirtualMouse createVirtualMouse(@NonNull android.hardware.input.VirtualMouseConfig);
+    method @NonNull @RequiresPermission(android.Manifest.permission.INJECT_EVENTS) public android.hardware.input.VirtualTouchscreen createVirtualTouchscreen(@NonNull android.hardware.input.VirtualTouchscreenConfig);
     method @FlaggedApi("com.android.hardware.input.controller_remapping") @NonNull @RequiresPermission("android.permission.CONTROLLER_REMAPPING") public java.util.Map<Integer, Integer> getControllerAxisRemappings(@NonNull android.hardware.input.InputDeviceIdentifier);
     method @FlaggedApi("com.android.hardware.input.controller_remapping") @NonNull @RequiresPermission("android.permission.CONTROLLER_REMAPPING") public java.util.Map<Integer, Integer> getControllerButtonRemappings(@NonNull android.hardware.input.InputDeviceIdentifier);
     method @Nullable @RequiresPermission(android.Manifest.permission.INJECT_EVENTS) public android.graphics.PointF getCursorPosition(int);

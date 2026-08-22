@@ -35,11 +35,13 @@ import android.hardware.input.ITabletModeChangedListener;
 import android.hardware.input.IVirtualGamepad;
 import android.hardware.input.IVirtualKeyboard;
 import android.hardware.input.IVirtualMouse;
+import android.hardware.input.IVirtualTouchscreen;
 import android.hardware.input.KeyboardLayoutSelectionResult;
 import android.hardware.input.TouchCalibration;
 import android.hardware.input.VirtualGamepadConfig;
 import android.hardware.input.VirtualKeyboardConfig;
 import android.hardware.input.VirtualMouseConfig;
+import android.hardware.input.VirtualTouchscreenConfig;
 import android.os.CombinedVibration;
 import android.hardware.input.IInputSensorEventListener;
 import android.hardware.input.IKeyEventActivityListener;
@@ -100,6 +102,10 @@ interface IInputManager {
 
     @EnforcePermission("INJECT_EVENTS")
     IVirtualMouse createVirtualMouse(in IBinder token, in VirtualMouseConfig config);
+
+    @EnforcePermission("INJECT_EVENTS")
+    IVirtualTouchscreen createVirtualTouchscreen(in IBinder token,
+            in VirtualTouchscreenConfig config);
 
     // Controls framework pointer-icon composition for a display whose input is presented by
     // another window system. The caller must have ASSOCIATE_INPUT_DEVICE_TO_DISPLAY.

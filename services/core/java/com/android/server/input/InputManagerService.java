@@ -1125,6 +1125,18 @@ public class InputManagerService extends IInputManager.Stub
         return createVirtualMouseInternal(token, config);
     }
 
+    @NonNull
+    @Override // Binder call
+    @EnforcePermission(Manifest.permission.INJECT_EVENTS)
+    public IVirtualTouchscreen createVirtualTouchscreen(
+            @NonNull IBinder token, @NonNull VirtualTouchscreenConfig config) {
+        super.createVirtualTouchscreen_enforcePermission();
+
+        checkDisplayAssociationPermission(config.getAssociatedDisplayId(), Binder.getCallingUid());
+
+        return createVirtualTouchscreenInternal(token, config);
+    }
+
     @Override // Binder call
     public VerifiedInputEvent verifyInputEvent(@NonNull InputEvent event) {
         Objects.requireNonNull(event, "event must not be null");
@@ -2101,6 +2113,17 @@ public class InputManagerService extends IInputManager.Stub
         return mVirtualInputDeviceController.createMouse(config.getInputDeviceName(),
                 config.getVendorId(), config.getProductId(), token,
                 config.getAssociatedDisplayId(),
+                android.companion.virtualdevice.flags.Flags.virtualInputViewBehavior()
+                        ? config.getViewBehaviorConfigOrDefault(/* defaultValue= */ null)
+                        : null);
+    }
+
+    @NonNull
+    IVirtualTouchscreen createVirtualTouchscreenInternal(@NonNull IBinder token,
+            @NonNull VirtualTouchscreenConfig config) {
+        return mVirtualInputDeviceController.createTouchscreen(config.getInputDeviceName(),
+                config.getVendorId(), config.getProductId(), token,
+                config.getAssociatedDisplayId(), config.getHeight(), config.getWidth(),
                 android.companion.virtualdevice.flags.Flags.virtualInputViewBehavior()
                         ? config.getViewBehaviorConfigOrDefault(/* defaultValue= */ null)
                         : null);
@@ -4378,12 +4401,7 @@ public class InputManagerService extends IInputManager.Stub
         @Override
         public IVirtualTouchscreen createVirtualTouchscreen(@NonNull IBinder token,
                 @NonNull VirtualTouchscreenConfig config) {
-            return mVirtualInputDeviceController.createTouchscreen(config.getInputDeviceName(),
-                    config.getVendorId(), config.getProductId(), token,
-                    config.getAssociatedDisplayId(), config.getHeight(), config.getWidth(),
-                    android.companion.virtualdevice.flags.Flags.virtualInputViewBehavior()
-                            ? config.getViewBehaviorConfigOrDefault(/* defaultValue= */ null)
-                            : null);
+            return InputManagerService.this.createVirtualTouchscreenInternal(token, config);
         }
 
         @NonNull
